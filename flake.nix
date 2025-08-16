@@ -23,6 +23,8 @@
           dontWrapQtApps = true;
 
           propagatedBuildInputs = with pkgs.kdePackages; [
+            qtmultimedia    # For video backgrounds
+            qtsvg          # For icons (if any)
             qtdeclarative  # For QML (correct package name)
           ];
 
@@ -31,7 +33,9 @@
             
             # Copy theme files
             cp -r $src/Main.qml $out/share/sddm/themes/sakura/
+            cp -r $src/Config.qml $out/share/sddm/themes/sakura/
             cp -r $src/metadata.desktop $out/share/sddm/themes/sakura/
+            cp -r $src/sakura.conf $out/share/sddm/themes/sakura/
             
             # Copy backgrounds if they exist
             if [ -d "$src/backgrounds" ]; then
@@ -41,12 +45,6 @@
             # Copy icons if they exist
             if [ -d "$src/icons" ]; then
               cp -r $src/icons $out/share/sddm/themes/sakura/
-            fi
-            
-            # Copy fonts if they exist (though Ubuntu Sans should be system-wide)
-            if [ -d "$src/fonts" ]; then
-              mkdir -p $out/share/fonts
-              cp -r $src/fonts/* $out/share/fonts/
             fi
           '';
 
