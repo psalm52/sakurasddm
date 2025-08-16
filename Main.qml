@@ -1,5 +1,4 @@
 import QtQuick 2.15
-import QtMultimedia 6.0
 import QtQuick.Effects 6.0
 import SddmComponents 2.0
 
@@ -9,49 +8,18 @@ Rectangle {
     height: Screen.height
     color: "black"
 
-    // Background container
-    Item {
-        id: backgroundContainer
+    // Background image (no video for now)
+    Image {
+        id: backgroundImage
         anchors.fill: parent
-
-        // Video background
-        Video {
-            id: backgroundVideo
-            anchors.fill: parent
-            source: "backgrounds/sun_sakura.mp4"
-            autoPlay: true
-            loops: MediaPlayer.Infinite
-            fillMode: VideoOutput.PreserveAspectCrop
-            muted: true
-            
-            Component.onCompleted: {
-                if (source && source.toString().length > 0) {
-                    play()
-                }
-            }
-            
-            onErrorOccurred: function(error) {
-                if (error !== MediaPlayer.NoError) {
-                    // Fall back to placeholder image
-                    placeholderImage.visible = true
-                }
-            }
-        }
-
-        // Fallback placeholder image
-        Image {
-            id: placeholderImage
-            anchors.fill: parent
-            source: "backgrounds/sun_sakura.png"
-            fillMode: Image.PreserveAspectCrop
-            visible: backgroundVideo.playbackState !== MediaPlayer.PlayingState
-        }
+        source: "backgrounds/sun_sakura.png"
+        fillMode: Image.PreserveAspectCrop
     }
 
     // Background effects (blur, brightness, saturation)
     MultiEffect {
         id: backgroundEffect
-        source: backgroundContainer
+        source: backgroundImage
         anchors.fill: parent
         
         // Blur properties
@@ -92,7 +60,7 @@ Rectangle {
         }
     }
 
-    // Login area positioned on the left with 120px margin (matching your config)
+    // Login area positioned on the left with 120px margin
     Item {
         id: loginArea
         anchors {
@@ -123,7 +91,7 @@ Rectangle {
         Column {
             spacing: 10
             
-            // User avatar (circular with blue border when focused, matching your config)
+            // User avatar
             Item {
                 width: 120
                 height: 120
@@ -161,7 +129,7 @@ Rectangle {
                 }
             }
 
-            // Username (matching your font settings)
+            // Username
             Text {
                 id: usernameText
                 anchors.horizontalCenter: parent.horizontalCenter
@@ -184,7 +152,7 @@ Rectangle {
                 visible: userModel.count > 1
                 
                 background: Rectangle {
-                    color: "#BF000000" // 0.75 opacity black
+                    color: "#BF000000"
                     radius: 5
                 }
                 
@@ -193,7 +161,7 @@ Rectangle {
                 }
             }
 
-            // Password input and login button row (matching your config design)
+            // Password input and login button row
             Row {
                 anchors.horizontalCenter: parent.horizontalCenter
                 spacing: 0
@@ -202,7 +170,7 @@ Rectangle {
                     id: passwordContainer
                     width: 150
                     height: 30
-                    color: "#BF000000" // 0.75 opacity black
+                    color: "#BF000000"
                     radius: 10
                     
                     // Only round left corners
@@ -218,11 +186,11 @@ Rectangle {
                         anchors.centerIn: parent
                         spacing: 5
                         
-                        // Password icon
-                        Image {
-                            source: "icons/password.svg"
-                            width: 16
-                            height: 16
+                        // Password icon (fallback to Unicode if SVG fails)
+                        Text {
+                            text: "🔒"
+                            font.pixelSize: 12
+                            color: "#FFFFFF"
                             anchors.verticalCenter: parent.verticalCenter
                         }
                         
@@ -244,11 +212,9 @@ Rectangle {
                             
                             onActiveFocusChanged: {
                                 if (activeFocus) {
-                                    // Add subtle blur when focusing on password
                                     backgroundEffect.blurAmount = 5
                                     backgroundEffect.brightnessAmount = -0.2
                                 } else {
-                                    // Remove blur when unfocused
                                     backgroundEffect.blurAmount = 0
                                     backgroundEffect.brightnessAmount = 0.0
                                 }
@@ -273,10 +239,10 @@ Rectangle {
                         color: parent.color
                     }
                     
-                    Image {
-                        source: "icons/arrow-right.svg"
-                        width: 18
-                        height: 18
+                    Text {
+                        text: "→"
+                        font.pixelSize: 18
+                        color: "#FFFFFF"
                         anchors.centerIn: parent
                     }
                     
@@ -288,7 +254,6 @@ Rectangle {
                         }
                     }
                     
-                    // Subtle glow effect on hover
                     scale: loginMouseArea.containsMouse ? 1.05 : 1.0
                     Behavior on scale {
                         NumberAnimation {
@@ -313,7 +278,6 @@ Rectangle {
                 color: "#000000"
                 visible: text.length > 0
                 
-                // Fade in/out animation
                 opacity: text.length > 0 ? 1.0 : 0.0
                 Behavior on opacity {
                     NumberAnimation {
@@ -335,7 +299,7 @@ Rectangle {
         }
     }
 
-    // Session selection (bottom right, matching your config)
+    // Session selection (bottom right)
     Rectangle {
         id: sessionArea
         anchors {
@@ -349,61 +313,29 @@ Rectangle {
         radius: 5
         visible: sessionModel.count > 1
         
-        // Slide in from right animation
-        x: root.width
-        Component.onCompleted: {
-            sessionSlideAnimation.start()
-        }
-        
-        PropertyAnimation {
-            id: sessionSlideAnimation
-            target: sessionArea
-            property: "x"
-            to: root.width - sessionArea.width - 20
-            duration: 800
-            easing.type: Easing.OutCubic
-        }
-        
-        Row {
-            anchors.centerIn: parent
-            spacing: 8
+        ComboBox {
+            id: sessionBox
+            anchors.fill: parent
+            model: sessionModel
+            textRole: "display"
+            currentIndex: sessionModel.lastIndex
             
-            Image {
-                id: sessionIcon
-                source: getSessionIcon(sessionBox.currentIndex)
-                width: 16
-                height: 16
-                anchors.verticalCenter: parent.verticalCenter
+            background: Rectangle {
+                color: "transparent"
             }
             
-            ComboBox {
-                id: sessionBox
-                width: 160
-                model: sessionModel
-                textRole: "display"
-                currentIndex: sessionModel.lastIndex
-                
-                background: Rectangle {
-                    color: "transparent"
-                }
-                
-                contentItem: Text {
-                    text: sessionBox.displayText
-                    font.family: "Ubuntu Sans"
-                    font.pixelSize: 10
-                    color: "#FFFFFF"
-                    verticalAlignment: Text.AlignVCenter
-                    leftPadding: 5
-                }
-                
-                onCurrentIndexChanged: {
-                    sessionIcon.source = getSessionIcon(currentIndex)
-                }
+            contentItem: Text {
+                text: sessionBox.displayText
+                font.family: "Ubuntu Sans"
+                font.pixelSize: 10
+                color: "#FFFFFF"
+                verticalAlignment: Text.AlignVCenter
+                leftPadding: 10
             }
         }
     }
 
-    // Power/system buttons (matching your menu area config)
+    // Power/system buttons
     Column {
         id: powerButtons
         anchors {
@@ -414,21 +346,6 @@ Rectangle {
         }
         spacing: 10
         
-        // Slide in from left animation
-        x: -60
-        Component.onCompleted: {
-            powerSlideAnimation.start()
-        }
-        
-        PropertyAnimation {
-            id: powerSlideAnimation
-            target: powerButtons
-            property: "x"
-            to: 50
-            duration: 1000
-            easing.type: Easing.OutCubic
-        }
-        
         // Power button
         Rectangle {
             width: 30
@@ -436,10 +353,10 @@ Rectangle {
             color: powerMouseArea.pressed ? "#FF000000" : "#BF000000"
             radius: 5
             
-            Image {
-                source: "icons/power.svg"
-                width: 16
-                height: 16
+            Text {
+                text: "⏻"
+                font.pixelSize: 16
+                color: "#FFFFFF"
                 anchors.centerIn: parent
             }
             
@@ -465,10 +382,10 @@ Rectangle {
             color: restartMouseArea.pressed ? "#FF000000" : "#BF000000"
             radius: 5
             
-            Image {
-                source: "icons/power-reboot.svg"
-                width: 16
-                height: 16
+            Text {
+                text: "↻"
+                font.pixelSize: 16
+                color: "#FFFFFF"
                 anchors.centerIn: parent
             }
             
@@ -494,7 +411,6 @@ Rectangle {
         
         function onLoginSucceeded() {
             statusMessage.text = "Login successful!"
-            // Animate blur and fade out on success
             backgroundEffect.blurAmount = 20
             backgroundEffect.brightnessAmount = -0.5
             loginArea.opacity = 0.0
@@ -504,23 +420,6 @@ Rectangle {
             statusMessage.showError("Login failed")
             passwordBox.text = ""
             passwordBox.forceActiveFocus()
-            
-            // Shake animation on login failure
-            shakeAnimation.start()
-        }
-        
-        // Shake animation for login failure
-        PropertyAnimation {
-            id: shakeAnimation
-            target: loginArea
-            property: "anchors.leftMargin"
-            from: 120
-            to: 130
-            duration: 100
-            loops: 4
-            onStopped: {
-                loginArea.anchors.leftMargin = 120
-            }
         }
     }
 
@@ -535,44 +434,6 @@ Rectangle {
             passwordBox.text,
             sessionBox.currentIndex
         )
-    }
-
-    function getSessionIcon(sessionIndex) {
-        if (sessionIndex < 0 || sessionIndex >= sessionModel.count) {
-            return "icons/sessions/default.svg"
-        }
-        
-        var sessionName = sessionModel.data(sessionModel.index(sessionIndex, 0), Qt.DisplayRole).toLowerCase()
-        
-        // Map session names to icons
-        var iconMap = {
-            "niri": "icons/sessions/niri.svg",
-            "hyprland": "icons/sessions/hyprland.svg",
-            "cosmic": "icons/sessions/cosmic.svg",
-            "plasma": "icons/sessions/plasma.svg",
-            "kde": "icons/sessions/plasma.svg", 
-            "gnome": "icons/sessions/gnome.svg",
-            "ubuntu": "icons/sessions/ubuntu.svg",
-            "xfce": "icons/sessions/xfce.svg",
-            "i3": "icons/sessions/i3.svg",
-            "sway": "icons/sessions/sway.svg",
-            "xorg": "icons/sessions/xorg.svg",
-            "wayland": "icons/sessions/wayland.svg"
-        }
-        
-        // Check for exact matches first
-        if (iconMap[sessionName]) {
-            return iconMap[sessionName]
-        }
-        
-        // Check for partial matches
-        for (var key in iconMap) {
-            if (sessionName.includes(key)) {
-                return iconMap[key]
-            }
-        }
-        
-        return "icons/sessions/default.svg"
     }
 
     Component.onCompleted: {
