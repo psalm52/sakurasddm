@@ -1,5 +1,5 @@
 {
-  description = "Sakura SDDM theme with video background";
+  description = "Simple Sakura SDDM theme with video background";
 
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs?ref=nixos-unstable";
@@ -25,7 +25,7 @@
           propagatedBuildInputs = with pkgs.kdePackages; [
             qtmultimedia    # For video backgrounds
             qtsvg          # For icons (if any)
-            qt6-declarative # For QML
+            qtdeclarative  # For QML (correct package name)
           ];
 
           installPhase = ''
@@ -40,6 +40,11 @@
               cp -r $src/backgrounds $out/share/sddm/themes/sakura/
             fi
             
+            # Copy icons if they exist
+            if [ -d "$src/icons" ]; then
+              cp -r $src/icons $out/share/sddm/themes/sakura/
+            fi
+            
             # Copy fonts if they exist (though Ubuntu Sans should be system-wide)
             if [ -d "$src/fonts" ]; then
               mkdir -p $out/share/fonts
@@ -48,7 +53,7 @@
           '';
 
           meta = with pkgs.lib; {
-            description = "SDDM theme with sakura video background and left-aligned login";
+            description = "Simple SDDM theme with video background and left-aligned login";
             license = licenses.gpl3;
             platforms = platforms.linux;
           };
