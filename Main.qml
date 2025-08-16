@@ -1,5 +1,4 @@
 import QtQuick 2.15
-import QtQuick.Effects 6.0
 import SddmComponents 2.0
 
 Rectangle {
@@ -8,51 +7,15 @@ Rectangle {
     height: Screen.height
     color: "black"
 
-    // Background image (no video for now)
+    // Background image (no effects for now)
     Image {
         id: backgroundImage
         anchors.fill: parent
         source: "backgrounds/sun_sakura.png"
         fillMode: Image.PreserveAspectCrop
-    }
-
-    // Background effects (blur, brightness, saturation)
-    MultiEffect {
-        id: backgroundEffect
-        source: backgroundImage
-        anchors.fill: parent
         
-        // Blur properties
-        blurEnabled: blurAmount > 0
-        blur: blurAmount > 0 ? 1.0 : 0.0
-        blurMax: blurAmount
-        
-        // Color adjustments
-        brightness: brightnessAmount
-        saturation: saturationAmount
-        
-        autoPaddingEnabled: false
-        
-        // Animation properties
-        property real blurAmount: 0
-        property real brightnessAmount: 0.0
-        property real saturationAmount: 0.0
-        
-        Behavior on blurMax {
-            NumberAnimation {
-                duration: 400
-                easing.type: Easing.OutCubic
-            }
-        }
-        
-        Behavior on brightness {
-            NumberAnimation {
-                duration: 400
-                easing.type: Easing.OutCubic
-            }
-        }
-        
-        Behavior on saturation {
+        // Add smooth opacity transitions
+        Behavior on opacity {
             NumberAnimation {
                 duration: 400
                 easing.type: Easing.OutCubic
@@ -212,11 +175,10 @@ Rectangle {
                             
                             onActiveFocusChanged: {
                                 if (activeFocus) {
-                                    backgroundEffect.blurAmount = 5
-                                    backgroundEffect.brightnessAmount = -0.2
+                                    // Simple opacity change instead of blur
+                                    backgroundImage.opacity = 0.7
                                 } else {
-                                    backgroundEffect.blurAmount = 0
-                                    backgroundEffect.brightnessAmount = 0.0
+                                    backgroundImage.opacity = 1.0
                                 }
                             }
                         }
@@ -411,8 +373,8 @@ Rectangle {
         
         function onLoginSucceeded() {
             statusMessage.text = "Login successful!"
-            backgroundEffect.blurAmount = 20
-            backgroundEffect.brightnessAmount = -0.5
+            // Simple fade effect instead of blur
+            backgroundImage.opacity = 0.3
             loginArea.opacity = 0.0
         }
         
