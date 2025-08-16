@@ -23,8 +23,6 @@
           dontWrapQtApps = true;
 
           propagatedBuildInputs = with pkgs.kdePackages; [
-            qtmultimedia    # For video backgrounds
-            qtsvg          # For icons (if any)
             qtdeclarative  # For QML (correct package name)
           ];
 
