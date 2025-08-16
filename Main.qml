@@ -8,6 +8,9 @@ Rectangle {
     height: Screen.height
     color: "black"
 
+    // Add property to track current user
+    property int currentUserIndex: userModel.lastIndex
+
     // Background image
     Image {
         id: backgroundImage
@@ -56,7 +59,7 @@ Rectangle {
                     anchors.centerIn: parent
                     width: parent.width - 10
                     height: parent.height - 10
-                    source: userModel.data(userModel.index(userBox.currentIndex, 0), Qt.UserRole + 2) || ""
+                    source: userModel.data(userModel.index(currentUserIndex, 0), Qt.UserRole + 2) || ""
                     fillMode: Image.PreserveAspectCrop
                     clip: true
                 }
@@ -66,14 +69,14 @@ Rectangle {
             Text {
                 id: usernameText
                 anchors.horizontalCenter: parent.horizontalCenter
-                text: userModel.data(userModel.index(userBox.currentIndex, 0), Qt.DisplayRole) || "User"
+                text: userModel.data(userModel.index(currentUserIndex, 0), Qt.DisplayRole) || "User"
                 font.family: Theme.Config.fontFamily
                 font.pixelSize: Theme.Config.usernameFontSize
                 font.weight: Font.Bold
                 color: Theme.Config.usernameColor
             }
 
-            // User selector (hidden unless multiple users)
+            // User selector (hidden unless multiple users) - NO COMBOBOX
             Rectangle {
                 width: Theme.Config.passwordWidth
                 height: Theme.Config.passwordHeight
@@ -82,28 +85,23 @@ Rectangle {
                 radius: Theme.Config.buttonRadius
                 visible: userModel.count > 1
                 
-                ComboBox {
-                    id: userBox
+                Text {
+                    id: userSelector
+                    anchors.centerIn: parent
+                    text: userModel.data(userModel.index(0, 0), Qt.DisplayRole) || "User"
+                    font.family: Theme.Config.fontFamily
+                    font.pixelSize: Theme.Config.passwordFontSize
+                    color: Theme.Config.passwordTextColor
+                }
+                
+                MouseArea {
                     anchors.fill: parent
-                    model: userModel
-                    textRole: "display"
-                    currentIndex: userModel.lastIndex
-                    
-                    background: Rectangle {
-                        color: "transparent"
-                    }
-                    
-                    contentItem: Text {
-                        text: userBox.displayText
-                        font.family: Theme.Config.fontFamily
-                        font.pixelSize: Theme.Config.passwordFontSize
-                        color: Theme.Config.passwordTextColor
-                        verticalAlignment: Text.AlignVCenter
-                        leftPadding: 10
-                    }
-                    
-                    onActivated: {
-                        usernameText.text = userModel.data(userModel.index(currentIndex, 0), Qt.DisplayRole)
+                    onClicked: {
+                        // Cycle through users on click
+                        var nextIndex = (currentUserIndex + 1) % userModel.count
+                        currentUserIndex = nextIndex
+                        userSelector.text = userModel.data(userModel.index(nextIndex, 0), Qt.DisplayRole)
+                        usernameText.text = userSelector.text
                     }
                 }
             }
@@ -181,8 +179,9 @@ Rectangle {
         }
     }
 
-    // Session selector (bottom right)
+    // Session selector (bottom right) - NO COMBOBOX
     Rectangle {
+        id: sessionArea
         anchors {
             right: parent.right
             bottom: parent.bottom
@@ -194,24 +193,24 @@ Rectangle {
         radius: Theme.Config.buttonRadius
         visible: Theme.Config.showSessionSelector && sessionModel.count > 1
         
-        ComboBox {
-            id: sessionBox
+        property int currentSessionIndex: sessionModel.lastIndex
+        
+        Text {
+            id: sessionSelector
+            anchors.centerIn: parent
+            text: sessionModel.data(sessionModel.index(parent.currentSessionIndex, 0), Qt.DisplayRole) || "Session"
+            font.family: Theme.Config.fontFamily
+            font.pixelSize: Theme.Config.passwordFontSize
+            color: Theme.Config.passwordTextColor
+        }
+        
+        MouseArea {
             anchors.fill: parent
-            model: sessionModel
-            textRole: "display"
-            currentIndex: sessionModel.lastIndex
-            
-            background: Rectangle {
-                color: "transparent"
-            }
-            
-            contentItem: Text {
-                text: sessionBox.displayText
-                font.family: Theme.Config.fontFamily
-                font.pixelSize: Theme.Config.passwordFontSize
-                color: Theme.Config.passwordTextColor
-                verticalAlignment: Text.AlignVCenter
-                leftPadding: 10
+            onClicked: {
+                // Cycle through sessions on click
+                var nextIndex = (parent.currentSessionIndex + 1) % sessionModel.count
+                parent.currentSessionIndex = nextIndex
+                sessionSelector.text = sessionModel.data(sessionModel.index(nextIndex, 0), Qt.DisplayRole)
             }
         }
     }
@@ -292,9 +291,9 @@ Rectangle {
         }
         
         sddm.login(
-            userModel.data(userModel.index(userBox.currentIndex, 0), Qt.UserRole),
+            userModel.data(userModel.index(currentUserIndex, 0), Qt.UserRole),
             passwordBox.text,
-            sessionBox.currentIndex
+            sessionArea.currentSessionIndex
         )
     }
 
