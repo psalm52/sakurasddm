@@ -7,20 +7,12 @@ Rectangle {
     height: Screen.height
     color: "black"
 
-    // Background image (no effects for now)
+    // Background image
     Image {
         id: backgroundImage
         anchors.fill: parent
         source: "backgrounds/sun_sakura.png"
         fillMode: Image.PreserveAspectCrop
-        
-        // Add smooth opacity transitions
-        Behavior on opacity {
-            NumberAnimation {
-                duration: 400
-                easing.type: Easing.OutCubic
-            }
-        }
     }
 
     // Login area positioned on the left with 120px margin
@@ -34,59 +26,38 @@ Rectangle {
         width: 300
         height: childrenRect.height
 
-        // Add entrance animation
-        scale: 0.5
-        opacity: 0.0
-        
-        Component.onCompleted: {
-            entranceAnimation.start()
-        }
-        
-        PropertyAnimation {
-            id: entranceAnimation
-            target: loginArea
-            properties: "scale,opacity"
-            to: 1.0
-            duration: 600
-            easing.type: Easing.OutBack
-        }
-
         Column {
             spacing: 10
             
-            // User avatar
-            Item {
+            // User avatar (simple circle)
+            Rectangle {
                 width: 120
                 height: 120
                 anchors.horizontalCenter: parent.horizontalCenter
+                radius: 60
+                color: "#333"
+                border.color: passwordBox.activeFocus ? "#04a5e5" : "#666"
+                border.width: 3
                 
                 Image {
                     id: avatar
-                    anchors.fill: parent
+                    anchors.centerIn: parent
+                    width: 110
+                    height: 110
                     source: userModel.data(userModel.index(userBox.currentIndex, 0), Qt.UserRole + 2) || ""
                     fillMode: Image.PreserveAspectCrop
                     
+                    // Simple circular clipping
                     Rectangle {
                         anchors.fill: parent
-                        radius: width / 2
+                        radius: 55
                         color: "transparent"
-                        border.color: passwordBox.activeFocus || userBox.activeFocus ? "#04a5e5" : "transparent"
-                        border.width: 5
+                        clip: true
                         
-                        Behavior on border.color {
-                            ColorAnimation {
-                                duration: 250
-                            }
-                        }
-                    }
-                    
-                    // Circular mask
-                    layer.enabled: true
-                    layer.effect: Item {
-                        Rectangle {
+                        Image {
                             anchors.fill: parent
-                            radius: width / 2
-                            color: "black"
+                            source: avatar.source
+                            fillMode: Image.PreserveAspectCrop
                         }
                     }
                 }
@@ -100,27 +71,32 @@ Rectangle {
                 font.family: "Ubuntu Sans"
                 font.pixelSize: 16
                 font.weight: Font.Bold
-                color: "#000000"
+                color: "#FFFFFF"
             }
 
-            // Username dropdown (hidden, but functional)
-            ComboBox {
-                id: userBox
+            // Username dropdown (hidden unless multiple users)
+            Rectangle {
                 width: 150
                 height: 30
                 anchors.horizontalCenter: parent.horizontalCenter
-                model: userModel
-                textRole: "display"
-                currentIndex: userModel.lastIndex
+                color: "#BF000000"
+                radius: 5
                 visible: userModel.count > 1
                 
-                background: Rectangle {
-                    color: "#BF000000"
-                    radius: 5
-                }
-                
-                onCurrentIndexChanged: {
-                    usernameText.text = userModel.data(userModel.index(currentIndex, 0), Qt.DisplayRole)
+                ComboBox {
+                    id: userBox
+                    anchors.fill: parent
+                    model: userModel
+                    textRole: "display"
+                    currentIndex: userModel.lastIndex
+                    
+                    background: Rectangle {
+                        color: "transparent"
+                    }
+                    
+                    onCurrentIndexChanged: {
+                        usernameText.text = userModel.data(userModel.index(currentIndex, 0), Qt.DisplayRole)
+                    }
                 }
             }
 
@@ -134,22 +110,12 @@ Rectangle {
                     width: 150
                     height: 30
                     color: "#BF000000"
-                    radius: 10
-                    
-                    // Only round left corners
-                    Rectangle {
-                        anchors.right: parent.right
-                        anchors.top: parent.top
-                        anchors.bottom: parent.bottom
-                        width: 10
-                        color: parent.color
-                    }
                     
                     Row {
                         anchors.centerIn: parent
                         spacing: 5
                         
-                        // Password icon (fallback to Unicode if SVG fails)
+                        // Password icon
                         Text {
                             text: "🔒"
                             font.pixelSize: 12
@@ -172,15 +138,6 @@ Rectangle {
                                     root.login()
                                 }
                             }
-                            
-                            onActiveFocusChanged: {
-                                if (activeFocus) {
-                                    // Simple opacity change instead of blur
-                                    backgroundImage.opacity = 0.7
-                                } else {
-                                    backgroundImage.opacity = 1.0
-                                }
-                            }
                         }
                     }
                 }
@@ -190,16 +147,6 @@ Rectangle {
                     width: 40
                     height: 30
                     color: loginMouseArea.pressed ? "#FF000000" : "#BF000000"
-                    radius: 10
-                    
-                    // Only round right corners
-                    Rectangle {
-                        anchors.left: parent.left
-                        anchors.top: parent.top
-                        anchors.bottom: parent.bottom
-                        width: 10
-                        color: parent.color
-                    }
                     
                     Text {
                         text: "→"
@@ -211,22 +158,7 @@ Rectangle {
                     MouseArea {
                         id: loginMouseArea
                         anchors.fill: parent
-                        onClicked: {
-                            root.login()
-                        }
-                    }
-                    
-                    scale: loginMouseArea.containsMouse ? 1.05 : 1.0
-                    Behavior on scale {
-                        NumberAnimation {
-                            duration: 150
-                        }
-                    }
-                    
-                    Behavior on color {
-                        ColorAnimation {
-                            duration: 150
-                        }
+                        onClicked: root.login()
                     }
                 }
             }
@@ -237,15 +169,8 @@ Rectangle {
                 anchors.horizontalCenter: parent.horizontalCenter
                 font.family: "Ubuntu Sans"
                 font.pixelSize: 11
-                color: "#000000"
+                color: "#FFFFFF"
                 visible: text.length > 0
-                
-                opacity: text.length > 0 ? 1.0 : 0.0
-                Behavior on opacity {
-                    NumberAnimation {
-                        duration: 250
-                    }
-                }
                 
                 function showError(msg) {
                     text = msg
@@ -272,7 +197,6 @@ Rectangle {
         width: 200
         height: 30
         color: "#BF000000"
-        radius: 5
         visible: sessionModel.count > 1
         
         ComboBox {
@@ -297,9 +221,8 @@ Rectangle {
         }
     }
 
-    // Power/system buttons
+    // Power buttons
     Column {
-        id: powerButtons
         anchors {
             left: parent.left
             leftMargin: 50
@@ -313,7 +236,6 @@ Rectangle {
             width: 30
             height: 30
             color: powerMouseArea.pressed ? "#FF000000" : "#BF000000"
-            radius: 5
             
             Text {
                 text: "⏻"
@@ -325,15 +247,7 @@ Rectangle {
             MouseArea {
                 id: powerMouseArea
                 anchors.fill: parent
-                hoverEnabled: true
                 onClicked: sddm.powerOff()
-            }
-            
-            scale: powerMouseArea.containsMouse ? 1.1 : 1.0
-            Behavior on scale {
-                NumberAnimation {
-                    duration: 150
-                }
             }
         }
         
@@ -342,7 +256,6 @@ Rectangle {
             width: 30
             height: 30
             color: restartMouseArea.pressed ? "#FF000000" : "#BF000000"
-            radius: 5
             
             Text {
                 text: "↻"
@@ -354,15 +267,7 @@ Rectangle {
             MouseArea {
                 id: restartMouseArea
                 anchors.fill: parent
-                hoverEnabled: true
                 onClicked: sddm.reboot()
-            }
-            
-            scale: restartMouseArea.containsMouse ? 1.1 : 1.0
-            Behavior on scale {
-                NumberAnimation {
-                    duration: 150
-                }
             }
         }
     }
@@ -373,9 +278,6 @@ Rectangle {
         
         function onLoginSucceeded() {
             statusMessage.text = "Login successful!"
-            // Simple fade effect instead of blur
-            backgroundImage.opacity = 0.3
-            loginArea.opacity = 0.0
         }
         
         function onLoginFailed() {
