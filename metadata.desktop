@@ -1,14 +1,10 @@
 [SddmGreeterTheme]
 Name=Sakura
-Description=SDDM sakura theme with video background and left-aligned login
+Description=Simple sakura theme with video background and left-aligned login
 Author=YourName
-Copyright=GPL
-License=GPL
 Type=sddm-theme
 Version=1.0
 Theme-Id=sakura
 Theme-API=2.0
 MainScript=Main.qml
-ConfigFile=sakura.conf
-Screenshot=screenshot.png
 QtVersion=6
