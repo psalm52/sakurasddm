@@ -33,9 +33,8 @@
             
             # Copy theme files
             cp -r $src/Main.qml $out/share/sddm/themes/sakura/
-            cp -r $src/Config.qml $out/share/sddm/themes/sakura/
             cp -r $src/metadata.desktop $out/share/sddm/themes/sakura/
-            cp -r $src/sakura.conf $out/share/sddm/themes/sakura/
+       
             
             # Copy backgrounds if they exist
             if [ -d "$src/backgrounds" ]; then
