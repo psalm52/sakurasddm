@@ -1,66 +1,65 @@
-import QtQuick 2.15
-import SddmComponents 2.0
+{
+  description = "Simple Sakura SDDM theme with video background";
 
-Rectangle {
-    width: Screen.width
-    height: Screen.height
-    
-    // Your background
-    Image {
-        anchors.fill: parent
-        source: "backgrounds/sun_sakura.png"
-        fillMode: Image.PreserveAspectCrop
-    }
-    
-    // Login on the left (120px from edge)
-    Column {
-        anchors {
-            left: parent.left
-            leftMargin: 120
-            verticalCenter: parent.verticalCenter
-        }
-        spacing: 20
+  inputs = {
+    nixpkgs.url = "github:nixos/nixpkgs?ref=nixos-unstable";
+  };
+
+  outputs = { self, nixpkgs }:
+    let
+      systems = [ "x86_64-linux" "aarch64-linux" ];
+      forAllSystems = f: nixpkgs.lib.genAttrs systems (system: f (import nixpkgs { inherit system; }));
+    in
+    {
+      packages = forAllSystems (pkgs: rec {
+        default = sakura-sddm-theme;
         
-        Text {
-            text: "Welcome"
-            color: "white"
-            font.pixelSize: 24
-        }
-        
-        Rectangle {
-            width: 200
-            height: 40
-            color: "#80000000"
+        sakura-sddm-theme = pkgs.stdenvNoCC.mkDerivation {
+          pname = "sakura-sddm-theme";
+          version = "1.0.0";
+
+          src = ./.;
+
+          dontWrapQtApps = true;
+
+          propagatedBuildInputs = with pkgs.kdePackages; [
+            qtmultimedia    # For video backgrounds
+            qtsvg          # For icons (if any)
+            qtdeclarative  # For QML (correct package name)
+          ];
+
+          installPhase = ''
+            mkdir -p $out/share/sddm/themes/sakura
             
-            TextInput {
-                id: pwd
-                anchors.fill: parent
-                anchors.margins: 10
-                color: "white"
-                echoMode: TextInput.Password
-                Keys.onReturnPressed: {
-                    sddm.login("psalms", pwd.text, 0)
-                }
-            }
-        }
-        
-        Rectangle {
-            width: 100
-            height: 40
-            color: "#80000000"
+            # Copy theme files
+            cp -r $src/Main.qml $out/share/sddm/themes/sakura/
+            cp -r $src/metadata.desktop $out/share/sddm/themes/sakura/
             
-            Text {
-                anchors.centerIn: parent
-                text: "Login"
-                color: "white"
-            }
-            
-            MouseArea {
-                anchors.fill: parent
-                onClicked: {
-                    sddm.login("psalms", pwd.text, 0)
-                }
-            }
-        }
-    }
+            # Copy backgrounds if they exist
+            if [ -d "$src/backgrounds" ]; then
+              cp -r $src/backgrounds $out/share/sddm/themes/sakura/
+            fi
+          '';
+
+          meta = with pkgs.lib; {
+            description = "Simple SDDM theme with video background and left-aligned login";
+            license = licenses.gpl3;
+            platforms = platforms.linux;
+          };
+
+          passthru.test = test;
+        };
+
+        # Simple test package
+        test = pkgs.symlinkJoin {
+          name = "test-sakura-sddm";
+          paths = [ pkgs.kdePackages.sddm ];
+          nativeBuildInputs = [ pkgs.makeWrapper ];
+          postBuild = ''
+            makeWrapper $out/bin/sddm-greeter-qt6 $out/bin/test-sakura-sddm \
+              --add-flags '--test-mode --theme ${sakura-sddm-theme}/share/sddm/themes/sakura'
+          '';
+        };
+      });
+    };
 }
